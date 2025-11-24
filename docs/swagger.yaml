@@ -1,96 +1,38 @@
+basePath: /
 definitions:
-  controllers.CreateTaskRequest:
+  controllers.AuthResponse:
     properties:
-      assignee_id:
-        type: integer
-      description:
+      token:
         type: string
-      priority:
-        $ref: '#/definitions/models.TaskPriority'
-      project_id:
-        type: integer
-      status:
-        $ref: '#/definitions/models.TaskStatus'
-      title:
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  controllers.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
         type: string
     required:
-    - project_id
-    - title
+    - email
+    - password
     type: object
-  controllers.UpdateTaskRequest:
+  controllers.RegisterRequest:
     properties:
-      assignee_id:
-        type: integer
-      description:
+      email:
         type: string
-      priority:
-        $ref: '#/definitions/models.TaskPriority'
-      status:
-        $ref: '#/definitions/models.TaskStatus'
-      title:
+      password:
+        minLength: 6
         type: string
+      role:
+        $ref: '#/definitions/models.UserRole'
+      username:
+        type: string
+    required:
+    - email
+    - password
+    - username
     type: object
-  models.Project:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      updated_at:
-        type: string
-      workspace:
-        $ref: '#/definitions/models.Workspace'
-      workspace_id:
-        type: integer
-    type: object
-  models.Task:
-    properties:
-      assignee:
-        $ref: '#/definitions/models.User'
-      assignee_id:
-        description: Pointer to allow null
-        type: integer
-      created_at:
-        type: string
-      description:
-        type: string
-      id:
-        type: integer
-      priority:
-        $ref: '#/definitions/models.TaskPriority'
-      project:
-        $ref: '#/definitions/models.Project'
-      project_id:
-        type: integer
-      status:
-        $ref: '#/definitions/models.TaskStatus'
-      title:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  models.TaskPriority:
-    enum:
-    - LOW
-    - MEDIUM
-    - HIGH
-    type: string
-    x-enum-varnames:
-    - TaskPriorityLow
-    - TaskPriorityMedium
-    - TaskPriorityHigh
-  models.TaskStatus:
-    enum:
-    - TODO
-    - IN_PROGRESS
-    - DONE
-    type: string
-    x-enum-varnames:
-    - TaskStatusTodo
-    - TaskStatusInProgress
-    - TaskStatusDone
   models.User:
     properties:
       created_at:
@@ -116,80 +58,38 @@ definitions:
     - RoleAdmin
     - RoleManager
     - RoleDev
-  models.Workspace:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      owner:
-        $ref: '#/definitions/models.User'
-      owner_id:
-        type: integer
-      updated_at:
-        type: string
-    type: object
+host: localhost:8080
 info:
-  contact: {}
+  contact:
+    email: support@taskmanager.com
+    name: API Support
+  description: API for managing collaborative tasks with role-based access control
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Collaborative Task Manager API
+  version: "1.0"
 paths:
-  /api/projects/{project_id}/tasks:
-    get:
+  /api/login:
+    post:
       consumes:
       - application/json
-      description: Get all tasks in a specific project
+      description: Authenticate user with email and password
       parameters:
-      - description: Project ID
-        in: path
-        name: project_id
+      - description: Login credentials
+        in: body
+        name: request
         required: true
-        type: integer
+        schema:
+          $ref: '#/definitions/controllers.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/models.Task'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: List tasks in a project
-      tags:
-      - tasks
-  /api/tasks:
-    post:
-      consumes:
-      - application/json
-      description: Create a new task in a project
-      parameters:
-      - description: Task details
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/controllers.CreateTaskRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.Task'
+            $ref: '#/definitions/controllers.AuthResponse'
         "400":
           description: Bad Request
           schema:
@@ -202,37 +102,23 @@ paths:
             additionalProperties:
               type: string
             type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Create a new task
+      summary: Login user
       tags:
-      - tasks
-  /api/tasks/{id}:
+      - auth
+  /api/profile:
     get:
       consumes:
       - application/json
-      description: Get a task by its ID
-      parameters:
-      - description: Task ID
-        in: path
-        name: id
-        required: true
-        type: integer
+      description: Get the authenticated user's profile
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Task'
-        "400":
-          description: Bad Request
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
           schema:
             additionalProperties:
               type: string
@@ -245,40 +131,30 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get task by ID
+      summary: Get user profile
       tags:
-      - tasks
-    put:
+      - auth
+  /api/register:
+    post:
       consumes:
       - application/json
-      description: Update task details
+      description: Create a new user account with username, email, password and role
       parameters:
-      - description: Task ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Updated task details
+      - description: Registration details
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/controllers.UpdateTaskRequest'
+          $ref: '#/definitions/controllers.RegisterRequest'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
-            $ref: '#/definitions/models.Task'
+            $ref: '#/definitions/controllers.AuthResponse'
         "400":
           description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
           schema:
             additionalProperties:
               type: string
@@ -289,9 +165,13 @@ paths:
             additionalProperties:
               type: string
             type: object
-      security:
-      - BearerAuth: []
-      summary: Update a task
+      summary: Register a new user
       tags:
-      - tasks
+      - auth
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

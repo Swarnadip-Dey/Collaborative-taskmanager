@@ -34,7 +34,17 @@ type AuthResponse struct {
 	User  *models.User `json:"user"`
 }
 
-// Register creates a new user
+// Register godoc
+// @Summary Register a new user
+// @Description Create a new user account with username, email, password and role
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RegisterRequest true "Registration details"
+// @Success 201 {object} AuthResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/register [post]
 func (ac *AuthController) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -86,7 +96,17 @@ func (ac *AuthController) Register(c *gin.Context) {
 	})
 }
 
-// Login authenticates a user
+// Login godoc
+// @Summary Login user
+// @Description Authenticate user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "Login credentials"
+// @Success 200 {object} AuthResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /api/login [post]
 func (ac *AuthController) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -120,7 +140,17 @@ func (ac *AuthController) Login(c *gin.Context) {
 	})
 }
 
-// GetProfile returns the current user's profile
+// GetProfile godoc
+// @Summary Get user profile
+// @Description Get the authenticated user's profile
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} models.User
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/profile [get]
 func (ac *AuthController) GetProfile(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {

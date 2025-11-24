@@ -6,10 +6,15 @@ import (
 	"github.com/Swarnadip-Dey/Collaborative-taskmanager/internal/repository"
 	"github.com/Swarnadip-Dey/Collaborative-taskmanager/pkg/middleware"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func SetupRouter(repo repository.Repository) *gin.Engine {
 	r := gin.Default()
+
+	// Swagger documentation
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Initialize controllers
 	authController := controllers.NewAuthController(repo)

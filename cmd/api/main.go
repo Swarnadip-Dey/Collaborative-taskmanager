@@ -3,11 +3,31 @@ package main
 import (
 	"log"
 
+	_ "github.com/Swarnadip-Dey/Collaborative-taskmanager/docs"
 	"github.com/Swarnadip-Dey/Collaborative-taskmanager/internal/repository/postgres"
 	"github.com/Swarnadip-Dey/Collaborative-taskmanager/internal/routes"
 	"github.com/Swarnadip-Dey/Collaborative-taskmanager/pkg/db"
 	"github.com/joho/godotenv"
 )
+
+// @title Collaborative Task Manager API
+// @version 1.0
+// @description API for managing collaborative tasks with role-based access control
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@taskmanager.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 
 func main() {
 	// Load .env file

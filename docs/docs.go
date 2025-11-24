@@ -9,20 +9,23 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "email": "support@taskmanager.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/projects/{project_id}/tasks": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all tasks in a specific project",
+        "/api/login": {
+            "post": {
+                "description": "Authenticate user with email and password",
                 "consumes": [
                     "application/json"
                 ],
@@ -30,83 +33,25 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tasks"
+                    "auth"
                 ],
-                "summary": "List tasks in a project",
+                "summary": "Login user",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Project ID",
-                        "name": "project_id",
-                        "in": "path",
-                        "required": true
+                        "description": "Login credentials",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.LoginRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Task"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/tasks": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new task in a project",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tasks"
-                ],
-                "summary": "Create a new task",
-                "parameters": [
-                    {
-                        "description": "Task details",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controllers.CreateTaskRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/models.Task"
+                            "$ref": "#/definitions/controllers.AuthResponse"
                         }
                     },
                     "400": {
@@ -126,9 +71,46 @@ const docTemplate = `{
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the authenticated user's profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get user profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -139,14 +121,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/tasks/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get a task by its ID",
+        "/api/register": {
+            "post": {
+                "description": "Create a new user account with username, email, password and role",
                 "consumes": [
                     "application/json"
                 ],
@@ -154,98 +131,29 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tasks"
+                    "auth"
                 ],
-                "summary": "Get task by ID",
+                "summary": "Register a new user",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Task ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Task"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update task details",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "tasks"
-                ],
-                "summary": "Update a task",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Task ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Updated task details",
+                        "description": "Registration details",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.UpdateTaskRequest"
+                            "$ref": "#/definitions/controllers.RegisterRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.Task"
+                            "$ref": "#/definitions/controllers.AuthResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -267,140 +175,54 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "controllers.CreateTaskRequest": {
+        "controllers.AuthResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                }
+            }
+        },
+        "controllers.LoginRequest": {
             "type": "object",
             "required": [
-                "project_id",
-                "title"
+                "email",
+                "password"
             ],
             "properties": {
-                "assignee_id": {
-                    "type": "integer"
-                },
-                "description": {
+                "email": {
                     "type": "string"
                 },
-                "priority": {
-                    "$ref": "#/definitions/models.TaskPriority"
-                },
-                "project_id": {
-                    "type": "integer"
-                },
-                "status": {
-                    "$ref": "#/definitions/models.TaskStatus"
-                },
-                "title": {
+                "password": {
                     "type": "string"
                 }
             }
         },
-        "controllers.UpdateTaskRequest": {
+        "controllers.RegisterRequest": {
             "type": "object",
-            "properties": {
-                "assignee_id": {
-                    "type": "integer"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "priority": {
-                    "$ref": "#/definitions/models.TaskPriority"
-                },
-                "status": {
-                    "$ref": "#/definitions/models.TaskStatus"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.Project": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "workspace": {
-                    "$ref": "#/definitions/models.Workspace"
-                },
-                "workspace_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "models.Task": {
-            "type": "object",
-            "properties": {
-                "assignee": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "assignee_id": {
-                    "description": "Pointer to allow null",
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "priority": {
-                    "$ref": "#/definitions/models.TaskPriority"
-                },
-                "project": {
-                    "$ref": "#/definitions/models.Project"
-                },
-                "project_id": {
-                    "type": "integer"
-                },
-                "status": {
-                    "$ref": "#/definitions/models.TaskStatus"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.TaskPriority": {
-            "type": "string",
-            "enum": [
-                "LOW",
-                "MEDIUM",
-                "HIGH"
+            "required": [
+                "email",
+                "password",
+                "username"
             ],
-            "x-enum-varnames": [
-                "TaskPriorityLow",
-                "TaskPriorityMedium",
-                "TaskPriorityHigh"
-            ]
-        },
-        "models.TaskStatus": {
-            "type": "string",
-            "enum": [
-                "TODO",
-                "IN_PROGRESS",
-                "DONE"
-            ],
-            "x-enum-varnames": [
-                "TaskStatusTodo",
-                "TaskStatusInProgress",
-                "TaskStatusDone"
-            ]
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "role": {
+                    "$ref": "#/definitions/models.UserRole"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
         },
         "models.User": {
             "type": "object",
@@ -437,41 +259,26 @@ const docTemplate = `{
                 "RoleManager",
                 "RoleDev"
             ]
-        },
-        "models.Workspace": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "owner": {
-                    "$ref": "#/definitions/models.User"
-                },
-                "owner_id": {
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Collaborative Task Manager API",
+	Description:      "API for managing collaborative tasks with role-based access control",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
