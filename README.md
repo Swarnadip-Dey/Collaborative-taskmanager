@@ -36,14 +36,10 @@ A **Go** based collaborative task‑manager API built with **Gin**, **GORM**, **
 
 3. **Configure the database**
    - Create a PostgreSQL database.
-   - Copy the example env file:
-     ```bash
-     cp .env.example .env
-     ```
-   - Edit `.env` and set the connection string.  To enforce TLS, add `sslmode=require`:
      ```dotenv
      DATABASE_URL=postgres://user:password@localhost:5432/taskdb?sslmode=require
      ```
+   - Remember to add *PORT* and *JWT_SECRET* in env
 
 4. **Run the API**
    ```bash
