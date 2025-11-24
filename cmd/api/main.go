@@ -2,11 +2,10 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/Swarnadip-Dey/Collaborative-taskmanager/internal/repository/postgres"
+	"github.com/Swarnadip-Dey/Collaborative-taskmanager/internal/routes"
 	"github.com/Swarnadip-Dey/Collaborative-taskmanager/pkg/db"
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -29,13 +28,13 @@ func main() {
 
 	// Repository initialization
 	repo := postgres.NewRepository(database)
-	_ = repo // Prevent unused variable error for now
 
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
-	r.Run() // listen and serve on 0.0.0.0:8080
+	// Setup routes
+	r := routes.SetupRouter(repo)
+
+	// Start server
+	log.Println("Server starting on :8080")
+	if err := r.Run(":8080"); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
