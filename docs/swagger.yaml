@@ -1,11 +1,51 @@
 basePath: /
 definitions:
+  controllers.AssignTaskRequest:
+    properties:
+      assignee_id:
+        type: integer
+    required:
+    - assignee_id
+    type: object
   controllers.AuthResponse:
     properties:
       token:
         type: string
       user:
         $ref: '#/definitions/models.User'
+    type: object
+  controllers.CreateProjectRequest:
+    properties:
+      name:
+        type: string
+      workspace_id:
+        type: integer
+    required:
+    - name
+    - workspace_id
+    type: object
+  controllers.CreateTaskRequest:
+    properties:
+      description:
+        type: string
+      priority:
+        $ref: '#/definitions/models.TaskPriority'
+      project_id:
+        type: integer
+      status:
+        $ref: '#/definitions/models.TaskStatus'
+      title:
+        type: string
+    required:
+    - project_id
+    - title
+    type: object
+  controllers.CreateWorkspaceRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
     type: object
   controllers.LoginRequest:
     properties:
@@ -33,6 +73,78 @@ definitions:
     - password
     - username
     type: object
+  controllers.UpdateTaskRequest:
+    properties:
+      description:
+        type: string
+      priority:
+        $ref: '#/definitions/models.TaskPriority'
+      status:
+        $ref: '#/definitions/models.TaskStatus'
+      title:
+        type: string
+    type: object
+  models.Project:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      workspace:
+        $ref: '#/definitions/models.Workspace'
+      workspace_id:
+        type: integer
+    type: object
+  models.Task:
+    properties:
+      assignee:
+        $ref: '#/definitions/models.User'
+      assignee_id:
+        description: Pointer to allow null
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      priority:
+        $ref: '#/definitions/models.TaskPriority'
+      project:
+        $ref: '#/definitions/models.Project'
+      project_id:
+        type: integer
+      status:
+        $ref: '#/definitions/models.TaskStatus'
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.TaskPriority:
+    enum:
+    - LOW
+    - MEDIUM
+    - HIGH
+    type: string
+    x-enum-varnames:
+    - TaskPriorityLow
+    - TaskPriorityMedium
+    - TaskPriorityHigh
+  models.TaskStatus:
+    enum:
+    - TODO
+    - IN_PROGRESS
+    - DONE
+    type: string
+    x-enum-varnames:
+    - TaskStatusTodo
+    - TaskStatusInProgress
+    - TaskStatusDone
   models.User:
     properties:
       created_at:
@@ -58,6 +170,21 @@ definitions:
     - RoleAdmin
     - RoleManager
     - RoleDev
+  models.Workspace:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      owner:
+        $ref: '#/definitions/models.User'
+      owner_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -71,6 +198,202 @@ info:
   title: Collaborative Task Manager API
   version: "1.0"
 paths:
+  /api/dev/projects/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Developer can view a project by its ID
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Project'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get project by ID
+      tags:
+      - developer
+  /api/dev/projects/{id}/tasks:
+    get:
+      consumes:
+      - application/json
+      description: Developer can view all tasks in a specific project
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List tasks in a project
+      tags:
+      - developer
+  /api/dev/tasks:
+    post:
+      consumes:
+      - application/json
+      description: Developer can create a new task in a project
+      parameters:
+      - description: Task details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new task
+      tags:
+      - developer
+  /api/dev/tasks/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Developer can view a task by its ID
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get task by ID
+      tags:
+      - developer
+    put:
+      consumes:
+      - application/json
+      description: Developer can update task details (title, description, status,
+        priority)
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated task details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a task
+      tags:
+      - developer
   /api/login:
     post:
       consumes:
@@ -105,6 +428,180 @@ paths:
       summary: Login user
       tags:
       - auth
+  /api/manager/projects:
+    post:
+      consumes:
+      - application/json
+      description: Manager/Admin can create a new project in a workspace
+      parameters:
+      - description: Project details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateProjectRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Project'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new project
+      tags:
+      - manager
+  /api/manager/tasks/{id}/assign:
+    put:
+      consumes:
+      - application/json
+      description: Manager/Admin can assign a task to a developer
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Assignee details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.AssignTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Assign a task to a user
+      tags:
+      - manager
+  /api/manager/workspaces:
+    post:
+      consumes:
+      - application/json
+      description: Manager/Admin can create a new workspace (team)
+      parameters:
+      - description: Workspace details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateWorkspaceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Workspace'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new workspace
+      tags:
+      - manager
+  /api/manager/workspaces/{workspace_id}/projects:
+    get:
+      consumes:
+      - application/json
+      description: Manager/Admin can view all projects in a workspace
+      parameters:
+      - description: Workspace ID
+        in: path
+        name: workspace_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Project'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List projects in a workspace
+      tags:
+      - manager
   /api/profile:
     get:
       consumes:
