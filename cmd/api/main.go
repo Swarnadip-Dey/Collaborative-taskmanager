@@ -2,10 +2,12 @@ package main
 
 import (
 	"log"
+	"time"
 
 	_ "github.com/Swarnadip-Dey/Collaborative-taskmanager/docs"
 	"github.com/Swarnadip-Dey/Collaborative-taskmanager/internal/repository/postgres"
 	"github.com/Swarnadip-Dey/Collaborative-taskmanager/internal/routes"
+	"github.com/Swarnadip-Dey/Collaborative-taskmanager/internal/services"
 	"github.com/Swarnadip-Dey/Collaborative-taskmanager/pkg/db"
 	"github.com/joho/godotenv"
 )
@@ -40,6 +42,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
+
+	// Start health monitor (ping DB every minute)
+	services.StartHealthMonitor(database, time.Minute)
 
 	// Auto Migration
 	if err := db.Migrate(database); err != nil {
